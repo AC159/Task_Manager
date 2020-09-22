@@ -14,19 +14,12 @@ MongoClient.connect(connectionURL, {useNewUrlParser: true}, (error, client) => {
 
     const db = client.db(databaseName) // Create db or connect to it
 
-    // db.collection('Users').findOne({name: 'AC'}, (error, user) => {
-    //     if (error) {
-    //         return console.log('Unable to fetch user...')
-    //     }
-    //     console.log(user)
-    // })
-
-    db.collection('Users').find({age: 20}).toArray((error, users) => {
-        console.log(users)
-    })
-
-    db.collection('Users').find({age: 20}).count((error, count) => {
-        console.log(count)
+    db.collection('Users').deleteMany({
+        age: 99
+    }).then((result) => {
+        console.log(result)
+    }).catch((error) => {
+        console.log(error)
     })
 
 })
