@@ -2,56 +2,93 @@ const express = require('express');
 const router = express.Router();
 const User = require('..\\src\\models\\user.js')
 require('..\\src\\db\\mongoose.js')
+const auth = require('..\\src\\middleware\\auth.js')
 
 
 /* GET users listing. */
 
+// Create a new user
 router.post('/', async function (req, res) {
   const user = new User(req.body)
 
   try {
     await user.save()
-    res.status(201).send(user)
+
+    const token = await user.GenerateAuthToken()
+
+    res.status(201).send({ user, token })
+
   }catch (error) {
     res.status(400).send(error)
   }
 
 })
 
-// Fetch all users
-router.get('/', async function (req, res) {
+// Login a user
+router.post('/login', async function (req, res) {
 
   try{
-    const users = await User.find({}) // The empty object specifies no search criteria so it is going to fetch them all
-    res.send(users)
+
+    const user = await User.findByCredentials(req.body.email,req.body.password)
+
+    const token = await user.GenerateAuthToken()
+
+    res.send({ user: user, token: token })  // Send back the user & the token
+
+  }catch(error){
+    res.status(400).send()
+  }
+
+})
+
+// Logout a user
+router.post('/logout', auth, async function (req, res) {
+
+    try{
+
+      // Delete the token of this user's current session
+      req.user.tokens = req.user.tokens.filter((token) => {
+        return token.token !== req.token
+      })
+
+      await req.user.save()
+
+      res.send()
+
+    }catch(error){
+      res.status(500).send()
+    }
+
+})
+
+// Logout all sessions/tokens of this user
+router.post('/logoutAll', auth, async function(req, res) {
+
+  try{
+
+    // Wipe the user's tokens array
+    req.user.tokens = []
+    await req.user.save()
+    res.send()
+
+
   }catch(error){
     res.status(500).send()
   }
 
 })
 
-// Fetch one user
-router.get('/:id', async function (req, res) {
 
-  const id = req.params.id
+// Fetch user profile
+// Run the 'auth' middleware before processing the requests/response
+router.get('/me', auth, async function (req, res) {
 
-  try {
-    const user = await User.findById(id) // Search the user object by id
-
-    if (!user) {
-      return res.status(404).send()
-    }
-
-    res.send(user)
-
-  }catch (error){
-    res.status(500).send()
-  }
+  res.send(req.user)
 
 })
 
 // Update user information
-router.patch('/:id', async (req, res) => {
+router.patch('/me', auth, async (req, res) => {
 
   const updates = Object.keys(req.body)
   const allowedUpdates = ['name', 'email', 'password', 'age']
@@ -64,21 +101,13 @@ router.patch('/:id', async (req, res) => {
   }
 
   try {
-    const id = req.params.id
-
-    const user = await User.findById(id)
 
     updates.forEach((update) => {
-      user[update] = req.body[update]
+      req.user[update] = req.body[update]
     })
 
-    await user.save()
-
-    if (!user){
-      return res.status(404).send()
-    }
-
-    res.send(user)
+    await req.user.save()
+    res.send(req.user)
 
   }catch(error){
     res.status(400).send(error)
@@ -86,17 +115,12 @@ router.patch('/:id', async (req, res) => {
 
 })
 
-router.delete('/:id', async (req, res) => {
+router.delete('/me', auth, async (req, res) => {
 
   try {
 
-    const user = await User.findByIdAndDelete(req.params.id)
-
-    if (!user){
-      return res.status(404).send()
-    }
-
-    res.send(user)
+    await req.user.remove()
+    res.send(req.user)
 
   }catch(error){
     res.status(500).send(error)
