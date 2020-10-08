@@ -3,6 +3,21 @@ const router = express.Router();
 const User = require('..\\src\\models\\user.js')
 require('..\\src\\db\\mongoose.js')
 const auth = require('..\\src\\middleware\\auth.js')
+const multer = require('multer')
+const upload = multer({
+  dest: 'avatars',
+  limits: {
+    fileSize: 1000000 // File size can be 1 megabytes maximum
+  },
+  fileFilter(req, file, cb) {  // fileFilter is a function
+
+    if(!file.originalname.match(/\.(jpg|jpeg|png)$/)) {
+      return cb(new Error('Please upload a .jpg/.jpeg/.png image!'))
+    }
+    cb(undefined, true)  // Proceed with the route handler
+  }
+
+})
 
 
 /* GET users listing. */
@@ -126,6 +141,13 @@ router.delete('/me', auth, async (req, res) => {
     res.status(500).send(error)
   }
 
+})
+
+// Upload files with form-data instead of a json body
+router.post('/me/avatar', upload.single('avatar'), function(req, res) {
+  res.send()
+}, function (error, req, res, next) {
+  res.status(400).send({ error: error.message })
 })
 
 module.exports = router;
