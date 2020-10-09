@@ -4,8 +4,9 @@ const User = require('..\\src\\models\\user.js')
 require('..\\src\\db\\mongoose.js')
 const auth = require('..\\src\\middleware\\auth.js')
 const multer = require('multer')
+const sharp = require('sharp')
+
 const upload = multer({
-  dest: 'avatars',
   limits: {
     fileSize: 1000000 // File size can be 1 megabytes maximum
   },
@@ -144,10 +145,44 @@ router.delete('/me', auth, async (req, res) => {
 })
 
 // Upload files with form-data instead of a json body
-router.post('/me/avatar', upload.single('avatar'), function(req, res) {
+router.post('/me/avatar', auth, upload.single('avatar'), async function(req, res) {
+
+  req.user.avatar = await sharp(req.file.buffer).resize({width: 250, height: 250}).png().toBuffer()
+
+  await req.user.save()
   res.send()
+
 }, function (error, req, res, next) {
   res.status(400).send({ error: error.message })
+})
+
+// Delete user avatar
+router.delete('/me/avatar', auth, async function(req, res){
+
+  req.user.avatar = undefined
+  await req.user.save()
+  res.send()
+
+})
+
+// Fetch an avatar
+router.get('/:id/avatar', async function(req, res) {
+
+  try{
+
+    const user = await User.findById(req.params.id)
+
+    if(!user || !user.avatar){
+      throw new Error()
+    }
+
+    res.set('Content-Type', 'image/png')
+    res.send(user.avatar)
+
+  }catch(error){
+    res.status(404).send()
+  }
+
 })
 
 module.exports = router;
