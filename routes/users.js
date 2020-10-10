@@ -1,11 +1,11 @@
 const express = require('express');
 const router = express.Router();
-const User = require('..\\src\\models\\user.js')
-require('..\\src\\db\\mongoose.js')
-const auth = require('..\\src\\middleware\\auth.js')
+const User = require('../src/models/user.js')
+require('../src/db/mongoose.js')
+const auth = require('../src/middleware/auth.js')
 const multer = require('multer')
 const sharp = require('sharp')
-const { sendWelcomeEmail, sendCancellationEmail } = require('..\\src\\emails\\account.js')
+const { sendWelcomeEmail, sendCancellationEmail } = require('../src/emails/account.js')
 
 
 const upload = multer({

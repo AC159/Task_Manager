@@ -1,8 +1,8 @@
 const express = require('express');
 const router = express.Router();
-require('..\\src\\db\\mongoose.js')
-const Task = require('..\\src\\models\\task.js')
-const auth = require('..\\src\\middleware\\auth.js')
+require('../src/db/mongoose.js')
+const Task = require('../src/models/task.js')
+const auth = require('../src/middleware/auth.js')
 
 
 /* GET home page. */
