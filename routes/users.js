@@ -5,6 +5,8 @@ require('..\\src\\db\\mongoose.js')
 const auth = require('..\\src\\middleware\\auth.js')
 const multer = require('multer')
 const sharp = require('sharp')
+const { sendWelcomeEmail, sendCancellationEmail } = require('..\\src\\emails\\account.js')
+
 
 const upload = multer({
   limits: {
@@ -29,7 +31,7 @@ router.post('/', async function (req, res) {
 
   try {
     await user.save()
-
+    sendWelcomeEmail(user.email, user.name)
     const token = await user.GenerateAuthToken()
 
     res.status(201).send({ user, token })
@@ -134,8 +136,10 @@ router.patch('/me', auth, async (req, res) => {
 router.delete('/me', auth, async (req, res) => {
 
   try {
-
+    email = req.user.email
+    name = req.user.name
     await req.user.remove()
+    sendCancellationEmail(email, name)
     res.send(req.user)
 
   }catch(error){

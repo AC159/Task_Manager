@@ -6,7 +6,7 @@ const auth = async function (req, res, next) {
     try {
 
         const token = req.header('Authorization').replace('Bearer ', '')
-        const decoded = jwt.verify(token, 'thisismynewcourse')
+        const decoded = jwt.verify(token, process.env.JWT_SECRET)
 
         // Find a user by _id & check if they have the token in their token's array
         const user = await User.findOne({ _id: decoded._id, 'tokens.token': token })

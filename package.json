@@ -4,9 +4,10 @@
   "private": true,
   "scripts": {
     "start": "node ./bin/www",
-    "dev": "nodemon ./bin/www"
+    "dev": "env-cmd -f .env nodemon ./bin/www"
   },
   "dependencies": {
+    "@sendgrid/mail": "^7.2.6",
     "bcrypt": "^5.0.0",
     "cookie-parser": "~1.4.4",
     "debug": "~2.6.9",
@@ -22,6 +23,7 @@
     "validator": "^13.1.17"
   },
   "devDependencies": {
+    "env-cmd": "^10.1.0",
     "nodemon": "^2.0.4"
   }
 }
