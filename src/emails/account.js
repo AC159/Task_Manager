@@ -10,7 +10,6 @@ const sendWelcomeEmail = (email, name) => {
         text: `Welcome to the app ${name}! Let me know how you get along with the app.`
     }
 
-
     sgMail.send(msg)
         .then(function () {
             console.log('Message sent...')
@@ -27,7 +26,6 @@ const sendCancellationEmail = (email, name) => {
         subject: 'We are sorry to see you go',
         text: `We are sorry to see you go ${name}! Was there any way to improve the app?`
     }
-
 
     sgMail.send(msg)
         .then(function () {
