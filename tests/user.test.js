@@ -1,35 +1,26 @@
 const request = require('supertest')
 const app = require('../app.js')
 const User = require('../src/models/user.js')
-const jwt = require('jsonwebtoken')
-const mongoose = require('mongoose')
-
-const userOneId = new mongoose.Types.ObjectId()
-const userOne = {
-    _id: userOneId,
-    name: 'AC',
-    email: 'anacap1100@gmail.com',
-    age: 20,
-    password: 'test1234hello',
-    tokens: [{
-        token: jwt.sign({_id: userOneId}, process.env.JWT_SECRET)
-    }]
-}
+const {taskOne,
+    taskTwo,
+    taskThree,
+    userOne,
+    userTwo,
+    userOneId,
+    userTwoId,
+    setupDatabase } = require('./fixtures/db.js')
 
 
-beforeEach(async () => {
-    await User.deleteMany()  // Delete all users from the db before each test
-    await new User(userOne).save()
-})
+beforeEach(setupDatabase)
 
 
 test('Should sign up a new user', async () => {
 
     const response = await request(app).post('/users').send({
-        name: 'Anastassy',
-        email: 'anastassy100@gmail.com',
-        age: 20,
-        password: 'test1234hello'
+        name: userOne.name,
+        email: userOne.email,
+        age: userOne.age,
+        password: userOne.password
     }).expect(201)
 
     // Assert the db was changed correctly:
@@ -111,3 +102,45 @@ test('should not delete account for unauthenticated user', async () => {
         .expect(401)
 
 })
+
+test('should upload avatar image', async () => {
+
+    await request(app)
+        .post('/users/me/avatar')
+        .set('Authorization', `Bearer ${userOne.tokens[0].token}`)
+        .attach('avatar', 'tests/fixtures/philly.jpg')
+        .expect(200)
+
+    const user = await User.findById(userOneId)
+    expect(user.avatar).toEqual(expect.any(Buffer))
+
+})
+
+
+test('should update user fields', async () => {
+
+    await request(app)
+        .patch('/users/me')
+        .set('Authorization', `Bearer ${userOne.tokens[0].token}`)
+        .send({
+            name: 'Anastassy'
+        })
+        .expect(200)
+
+    const user = await User.findById(userOneId)
+    expect(user.name).toBe('Anastassy')
+
+})
+
+test('should not update random user fields', async () => {
+
+    await request(app)
+        .patch('/users/me')
+        .set('Authorization', `Bearer ${userOne.tokens[0].token}`)
+        .send({
+            location: 'Canada'
+        })
+        .expect(400)
+
+})
+
